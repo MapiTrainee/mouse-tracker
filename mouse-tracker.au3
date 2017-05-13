@@ -9,25 +9,30 @@
 
 ;<---USED HOTKEYS--->
 HotKeySet("{q}","Quit")
-HotKeySet("{w}","WriteCurrentCords")
+HotKeySet("{w}","WriteCurrentCoords")
 HotKeySet("{r}","RunMouse")
-HotKeySet("{e}","EmptyCords")
+HotKeySet("{e}","EmptyCoords")
+HotKeySet("{t}","PrintTrack")
 ;<!--USED HOTKEYS--!>
 
 While True
-   ToolTip ("Current cordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
+   ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
    Sleep(5)
 WEnd
 
-Func WriteCurrentCords()
+Func WriteCurrentCoords()
 
 EndFunc
 
-Func EmptyCords()
+Func EmptyCoords()
 
 EndFunc
 
 Func RunMouse()
+
+EndFunc
+
+Func PrintTrack()
 
 EndFunc
 
