@@ -4,8 +4,7 @@
  - simulates move the mouse pointer, click or double-click the left button.
 #ce ----------------------------------------------------------------------------
 
- #include <File.au3>
- #include <Array.au3>
+#include <Array.au3>
 
 ;<---USED HOTKEYS--->
 HotKeySet("{q}","Quit")
@@ -15,7 +14,7 @@ HotKeySet("{e}","EmptyCoords")
 HotKeySet("{t}","PrintTrack")
 ;<!--USED HOTKEYS--!>
 
-;Global
+Local $aCoords[0]
 
 While True
    ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
@@ -23,15 +22,22 @@ While True
 WEnd
 
 Func WriteCurrentCoords()
-   ConsoleWrite("WRITE CURRENT COORDS !!!");
+   _ArrayAdd($aCoords,MouseGetPos(0))
+   _ArrayAdd($aCoords,MouseGetPos(1))
 EndFunc
 
 Func EmptyCoords()
-
+   _ArrayDisplay($aCoords)
+   Local $aEmpty[0]
+   $aCoords = $aEmpty
 EndFunc
 
 Func RunMousePointer()
-
+   For $i = 0 To UBound($aCoords)/2 - 1
+	  $x = $aCoords[$i*2]
+	  $y = $aCoords[$i*2+1]
+	  MouseMove($x,$y,10)
+   Next
 EndFunc
 
 Func PrintTrack()
