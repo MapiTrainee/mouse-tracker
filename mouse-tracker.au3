@@ -10,10 +10,12 @@
 ;<---USED HOTKEYS--->
 HotKeySet("{q}","Quit")
 HotKeySet("{w}","WriteCurrentCoords")
-HotKeySet("{r}","RunMouse")
+HotKeySet("{r}","RunMousePointer")
 HotKeySet("{e}","EmptyCoords")
 HotKeySet("{t}","PrintTrack")
 ;<!--USED HOTKEYS--!>
+
+;Global
 
 While True
    ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
@@ -21,14 +23,14 @@ While True
 WEnd
 
 Func WriteCurrentCoords()
-
+   ConsoleWrite("WRITE CURRENT COORDS !!!");
 EndFunc
 
 Func EmptyCoords()
 
 EndFunc
 
-Func RunMouse()
+Func RunMousePointer()
 
 EndFunc
 
@@ -37,5 +39,8 @@ Func PrintTrack()
 EndFunc
 
 Func Quit()
-   Exit
+   Local $hExitMsgBox = MsgBox(32+4,"Exit...","Are you sure you want to exit the application?")
+   If $hExitMsgBox == 6 Then
+	  Exit
+   EndIf
 EndFunc
