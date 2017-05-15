@@ -10,16 +10,18 @@
 #include <GUIConstantsEx.au3>
 
 ;<---USED HOTKEYS--->
-HotKeySet("{q}","Quit")
-HotKeySet("{w}","WriteCurrentCoords")
-HotKeySet("{r}","RunMousePointer")
-HotKeySet("{e}","EmptyCoords")
-HotKeySet("{t}","PrintTrack")
+HotKeySet("{ESC}","Quit")
+HotKeySet("^{s}","WriteCurrentCoords")
+HotKeySet("^{r}","RunMousePointer")
+HotKeySet("^{e}","EmptyCoords")
+HotKeySet("^{z}","CancleLast")
+HotKeySet("^{t}","PrintTrack")
 ;<!--USED HOTKEYS--!>
 
 Global $sIconPath = @ScriptDir & "/mt.ico"
 Global $aCoords[0]
 Global $hGUI = GUICreate("", @DesktopWidth, @DesktopHeight, 0, 0, $WS_POPUP, $WS_EX_LAYERED)
+Global $bTrackOn = True
 
 GUISetBkColor(0x123456, $hGUI)
 GUISetIcon($sIconPath)
@@ -33,6 +35,9 @@ WEnd
 Func WriteCurrentCoords()
    _ArrayAdd($aCoords,MouseGetPos(0))
    _ArrayAdd($aCoords,MouseGetPos(1))
+   If $bTrackOn Then
+	  PrintTrackPoints()
+   EndIf
 EndFunc
 
 Func EmptyCoords()
@@ -45,22 +50,32 @@ Func RunMousePointer()
    For $i = 0 To UBound($aCoords)/2 - 1
 	  $x = $aCoords[$i*2]
 	  $y = $aCoords[$i*2+1]
-	  MouseMove($x,$y,10)
+	  MouseMove($x,$y,5)
    Next
 EndFunc
 
-Func PrintTrack()
-   _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
-   GUISetState(@SW_SHOW, $hGUI)
+Func CancleLast()
+   If UBound($aCoords)>0 Then
+	  _ArrayPop($aCoords)
+	  _ArrayPop($aCoords)
 
+	  If $bTrackOn Then
+		 _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
+		 PrintTrackPoints()
+	  EndIf
+   EndIf
+EndFunc
+
+Func PrintTrackPoints()
+   GUISetState(@SW_SHOW, $hGUI)
    Local $hGraphic, $hBrush, $hPen, $hFormat, $hFamily, $hFont, $tLayout, $aInfo
 
    _GDIPlus_Startup()
    $hGraphic = _GDIPlus_GraphicsCreateFromHWND($hGUI)
-   $hBrush = _GDIPlus_BrushCreateSolid(0xFFFFFFFF) ;0xFF18A1BF 0xFF17C77C
+   $hBrush = _GDIPlus_BrushCreateSolid(0xFFFFFFFF)
    $hPen = _GDIPlus_PenCreate(0xFFFFFFFF, 2)
-   $hBrushBg = _GDIPlus_BrushCreateSolid(0xFF18A1BF)
    $hFormat = _GDIPlus_StringFormatCreate()
+   $hBrushBg = _GDIPlus_BrushCreateSolid(0xFF18A1BF)
    $hFamily = _GDIPlus_FontFamilyCreate("Trebuchet MS")
    $hFont = _GDIPlus_FontCreate($hFamily, 10, 1)
 
@@ -89,7 +104,16 @@ Func PrintTrack()
    _GDIPlus_PenCreate($hPen)
    _GDIPlus_GraphicsDispose($hGraphic)
    _GDIPlus_Shutdown()
+EndFunc
 
+Func PrintTrack()
+   If $bTrackOn Then
+	  _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
+	  $bTrackOn = False
+   Else
+	  PrintTrackPoints()
+	  $bTrackOn = True
+   EndIf
 EndFunc
 
 Func Quit()
