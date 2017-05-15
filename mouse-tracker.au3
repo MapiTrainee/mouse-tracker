@@ -220,5 +220,6 @@ Func HelpMsgBox()
    & "[8] CTRL+Z = Cancel last operation." & @CRLF _
    & "[9] CTRL+Q = Stop mouse running." & @CRLF _
    & "[10] CTRL+R = Run mouse pointer." & @CRLF _
-   & "[11] CTRL+SHIFT+R = Run mouse pointer in loop." & @CRLF)
+   & "[11] CTRL+SHIFT+R = Run mouse pointer in loop." & @CRLF _
+   & "[12] CTRL+T = Switch on/off track mode." & @CRLF)
 EndFunc
