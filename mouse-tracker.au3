@@ -31,7 +31,7 @@ Global $hGUI = GUICreate("", @DesktopWidth, @DesktopHeight, 0, 0, $WS_POPUP, $WS
 Global $bTrackOn = True
 Global Enum $eMouseMove, $eMouseClick, $eMouseDoubleClick, $eMouseRightClick, $eMouseDrag
 Global $aMouseStates[0]
-Global $iMouseSpeed = 20
+Global $iMouseSpeed = 15
 Global $bStopMouse = False
 
 GUISetBkColor(0x123456, $hGUI)
@@ -45,7 +45,7 @@ WEnd
 
 Func WriteMouseState()
    Switch @HotKeyPressed
-   Case "^{s}"
+	  Case "^{s}"
 		 _ArrayAdd($aMouseStates, $eMouseMove)
 	  Case "^{f}"
 		 _ArrayAdd($aMouseStates, $eMouseRightClick)
