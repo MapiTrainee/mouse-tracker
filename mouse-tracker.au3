@@ -69,6 +69,7 @@ Func WriteCurrentCoords()
 EndFunc
 
 Func EmptyCoords()
+   $bStopMouse = True
    _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
    Local $aEmpty[0]
    $aCoords = $aEmpty
