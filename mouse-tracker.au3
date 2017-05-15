@@ -40,7 +40,7 @@ GUISetIcon($sIconPath)
 _WinAPI_SetLayeredWindowAttributes($hGUI, 0x123456)
 
 While True
-   ;ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
+   ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
    Sleep(100)
 WEnd
 
@@ -69,7 +69,7 @@ Func WriteCurrentCoords()
 EndFunc
 
 Func EmptyCoords()
-   $bStopMouse = True
+   StopMouse()
    _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
    Local $aEmpty[0]
    $aCoords = $aEmpty
@@ -77,40 +77,40 @@ Func EmptyCoords()
 EndFunc
 
 Func RunMousePointer()
+   $bStopMouse = False
+   Local $j, $start_x, $start_y
+   $j = 1
+   $prev_x = 0
+   $prev_y = 0
 
-	  Local $j, $start_x, $start_y
-	  $j = 1
-	  $prev_x = 0
-	  $prev_y = 0
+   For $i = 0 To UBound($aCoords)/2 - 1
+	  $x = $aCoords[$i*2]
+	  $y = $aCoords[$i*2+1]
 
-	  For $i = 0 To UBound($aCoords)/2 - 1
-		 $x = $aCoords[$i*2]
-		 $y = $aCoords[$i*2+1]
+	  Switch $aMouseStates[$j-1]
+	  Case $eMouseMove
+		 MouseMove($x,$y,$iMouseSpeed)
+	  Case $eMouseRightClick
+		 MouseClick($MOUSE_CLICK_RIGHT,$x,$y,1,$iMouseSpeed)
+	  Case $eMouseClick
+		 MouseClick($MOUSE_CLICK_LEFT,$x,$y,1,$iMouseSpeed)
+	  Case $eMouseDoubleClick
+		 MouseClick($MOUSE_CLICK_LEFT,$x,$y,2,$iMouseSpeed)
+	  Case $eMouseDrag
+		 MouseClickDrag($MOUSE_CLICK_LEFT,$prev_x,$prev_y,$x,$y,$iMouseSpeed)
+	  EndSwitch
 
-		 Switch $aMouseStates[$j-1]
-		 Case $eMouseMove
-			MouseMove($x,$y,$iMouseSpeed)
-		 Case $eMouseRightClick
-			MouseClick($MOUSE_CLICK_RIGHT,$x,$y,1,$iMouseSpeed)
-		 Case $eMouseClick
-			MouseClick($MOUSE_CLICK_LEFT,$x,$y,1,$iMouseSpeed)
-		 Case $eMouseDoubleClick
-			MouseClick($MOUSE_CLICK_LEFT,$x,$y,2,$iMouseSpeed)
-		 Case $eMouseDrag
-			MouseClickDrag($MOUSE_CLICK_LEFT,$prev_x,$prev_y,$x,$y,$iMouseSpeed)
-		 EndSwitch
+	  $prev_x = $x
+	  $prev_y = $y
 
-		 $prev_x = $x
-		 $prev_y = $y
+	  $j = $j + 1
+	  If $bStopMouse Then
+		 $bStopMouse = False
+		 Return False
+	  EndIf
+   Next
 
-		 $j = $j + 1
-		 If $bStopMouse Then
-			$bStopMouse = False
-			Return False
-		 EndIf
-	  Next
-
-	  Return True
+   Return True
 EndFunc
 
 Func RunMousePointerLoop()
@@ -125,6 +125,7 @@ Func StopMouse()
 EndFunc
 
 Func CancelLast()
+   StopMouse()
    If UBound($aCoords)>0 Then
 	  _ArrayPop($aCoords)
 	  _ArrayPop($aCoords)
