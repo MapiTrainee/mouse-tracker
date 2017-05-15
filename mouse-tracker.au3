@@ -8,6 +8,7 @@
 #include <WindowsConstants.au3>
 #include <GDIPlus.au3>
 #include <GUIConstantsEx.au3>
+#include <AutoItConstants.au3>
 
 ;<===USED HOTKEYS===>
 HotKeySet("{ESC}","Quit")
@@ -16,8 +17,9 @@ HotKeySet("^{f}","WriteMouseState")
 HotKeySet("^{c}","WriteMouseState")
 HotKeySet("^+{c}","WriteMouseState")
 HotKeySet("^{d}","WriteMouseState")
-;HotKeySet("^{s}","WriteCurrentCoords")
 HotKeySet("^{r}","RunMousePointer")
+HotKeySet("^+{r}","RunMousePointerLoop")
+HotKeySet("^{q}","StopMouse")
 HotKeySet("^{e}","EmptyCoords")
 HotKeySet("^{z}","CancleLast")
 HotKeySet("^{t}","PrintTrack")
@@ -29,6 +31,8 @@ Global $hGUI = GUICreate("", @DesktopWidth, @DesktopHeight, 0, 0, $WS_POPUP, $WS
 Global $bTrackOn = True
 Global Enum $eMouseMove, $eMouseClick, $eMouseDoubleClick, $eMouseRightClick, $eMouseDrag
 Global $aMouseStates[0]
+Global $iMouseSpeed = 20
+Global $bStopMouse = False
 
 GUISetBkColor(0x123456, $hGUI)
 GUISetIcon($sIconPath)
@@ -41,23 +45,23 @@ WEnd
 
 Func WriteMouseState()
    Switch @HotKeyPressed
-	  Case "^{s}"
-		 WriteCurrentCoords($eMouseMove)
+   Case "^{s}"
+		 _ArrayAdd($aMouseStates, $eMouseMove)
 	  Case "^{f}"
-		 WriteCurrentCoords($eMouseRightClick)
+		 _ArrayAdd($aMouseStates, $eMouseRightClick)
 	  Case "^{c}"
-		 WriteCurrentCoords($eMouseClick)
+		 _ArrayAdd($aMouseStates, $eMouseClick)
 	  Case "^+{c}"
-		 WriteCurrentCoords($eMouseDoubleClick)
+		 _ArrayAdd($aMouseStates, $eMouseDoubleClick)
 	  Case "^{d}"
-		 WriteCurrentCoords($eMouseDrag)
+		 _ArrayAdd($aMouseStates, $eMouseDrag)
    EndSwitch
+   WriteCurrentCoords()
 EndFunc
 
-Func WriteCurrentCoords($eMouse)
+Func WriteCurrentCoords()
    _ArrayAdd($aCoords,MouseGetPos(0))
    _ArrayAdd($aCoords,MouseGetPos(1))
-   _ArrayAdd($aMouseStates,$eMouse)
    If $bTrackOn Then
 	  PrintTrackPoints()
    EndIf
@@ -67,20 +71,62 @@ Func EmptyCoords()
    _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
    Local $aEmpty[0]
    $aCoords = $aEmpty
+   $aMouseStates = $aEmpty
 EndFunc
 
 Func RunMousePointer()
-   For $i = 0 To UBound($aCoords)/2 - 1
-	  $x = $aCoords[$i*2]
-	  $y = $aCoords[$i*2+1]
-	  MouseMove($x,$y,5)
-   Next
+
+	  Local $j, $start_x, $start_y
+	  $j = 1
+	  $prev_x = 0
+	  $prev_y = 0
+
+	  For $i = 0 To UBound($aCoords)/2 - 1
+		 $x = $aCoords[$i*2]
+		 $y = $aCoords[$i*2+1]
+
+		 Switch $aMouseStates[$j-1]
+		 Case $eMouseMove
+			MouseMove($x,$y,$iMouseSpeed)
+		 Case $eMouseRightClick
+			MouseClick($MOUSE_CLICK_RIGHT,$x,$y,1,$iMouseSpeed)
+		 Case $eMouseClick
+			MouseClick($MOUSE_CLICK_LEFT,$x,$y,1,$iMouseSpeed)
+		 Case $eMouseDoubleClick
+			MouseClick($MOUSE_CLICK_LEFT,$x,$y,2,$iMouseSpeed)
+		 Case $eMouseDrag
+			MouseClickDrag($MOUSE_CLICK_LEFT,$prev_x,$prev_y,$x,$y,$iMouseSpeed)
+		 EndSwitch
+
+		 $prev_x = $x
+		 $prev_y = $y
+
+		 $j = $j + 1
+		 If $bStopMouse Then
+			$bStopMouse = False
+			Return False
+		 EndIf
+	  Next
+
+	  Return True
+EndFunc
+
+Func RunMousePointerLoop()
+   Do
+	  Local $bRunLoop = Not RunMousePointer()
+   Until $bRunLoop
+EndFunc
+
+
+Func StopMouse()
+   $bStopMouse = True
 EndFunc
 
 Func CancleLast()
    If UBound($aCoords)>0 Then
 	  _ArrayPop($aCoords)
 	  _ArrayPop($aCoords)
+	  _ArrayPop($aMouseStates)
 
 	  If $bTrackOn Then
 		 _WinAPI_RedrawWindow($hGUI, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_UPDATENOW))
@@ -110,8 +156,22 @@ Func PrintTrackPoints()
 	  $y = $aCoords[$i*2+1]
 	  $sString = $j
 
-	  $tLayout = _GDIPlus_RectFCreate($x, $y, 0, 0)
+	  $tLayout = _GDIPlus_RectFCreate($x + 4, $y, 0, 0)
 	  $aInfo = _GDIPlus_GraphicsMeasureString($hGraphic, $sString, $hFont, $tLayout, $hFormat)
+
+	  Switch $aMouseStates[$j-1]
+	  Case $eMouseMove
+		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xff18a1bf)
+	  Case $eMouseRightClick
+		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xff18bf36)
+	  Case $eMouseClick
+		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xffffa500)
+	  Case $eMouseDoubleClick
+		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xffbf3618)
+	  Case $eMouseDrag
+		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xffbf18a1)
+	  EndSwitch
+
 	  _GDIPlus_GraphicsFillRect($hGraphic, $aInfo[0].X - $iSpace/2, $aInfo[0].Y - $iSpace/2, $aInfo[0].Width + $iSpace, $aInfo[0].Height + $iSpace, $hBrushBg)
 	  _GDIPlus_GraphicsDrawStringEx($hGraphic, $sString, $hFont, $aInfo[0], $hFormat, $hBrush)
 	  _GDIPlus_GraphicsDrawRect($hGraphic, $aInfo[0].X - $iSpace/2, $aInfo[0].Y - $iSpace/2, $aInfo[0].Width + $iSpace, $aInfo[0].Height + $iSpace, $hPen)
