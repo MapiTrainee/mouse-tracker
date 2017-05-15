@@ -21,8 +21,9 @@ HotKeySet("^{r}","RunMousePointer")
 HotKeySet("^+{r}","RunMousePointerLoop")
 HotKeySet("^{q}","StopMouse")
 HotKeySet("^{e}","EmptyCoords")
-HotKeySet("^{z}","CancleLast")
+HotKeySet("^{z}","CancelLast")
 HotKeySet("^{t}","PrintTrack")
+HotKeySet("{F1}","HelpMsgBox")
 ;<!==USED HOTKEYS==!>
 
 Global $sIconPath = @ScriptDir & "/mt.ico"
@@ -39,7 +40,7 @@ GUISetIcon($sIconPath)
 _WinAPI_SetLayeredWindowAttributes($hGUI, 0x123456)
 
 While True
-   ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
+   ;ToolTip ("Current coordinates: ["& MouseGetPos(0) &", "& MouseGetPos(1) &"]", MouseGetPos(0) + 10, MouseGetPos(1) + 20)
    Sleep(100)
 WEnd
 
@@ -122,7 +123,7 @@ Func StopMouse()
    $bStopMouse = True
 EndFunc
 
-Func CancleLast()
+Func CancelLast()
    If UBound($aCoords)>0 Then
 	  _ArrayPop($aCoords)
 	  _ArrayPop($aCoords)
@@ -205,4 +206,19 @@ Func Quit()
 	  GUIDelete($hGUI)
 	  Exit
    EndIf
+EndFunc
+
+Func HelpMsgBox()
+   MsgBox(0, "Help...", "Shortcuts that you have to know: " & @CRLF _
+   & "[1] F1 = Help. " & @CRLF _
+   & "[2] ESC = Exit." & @CRLF _
+   & "[3] CTRL+S = Mouse 'move' operation." & @CRLF _
+   & "[4] CTRL+F = Mouse 'right button click' operation." & @CRLF _
+   & "[5] CTRL+C = Mouse 'left button click' operation." & @CRLF _
+   & "[6] CTRL+SHIFT+C = Mouse 'left button double-click' operation." & @CRLF _
+   & "[7] CTRL+D = Mouse 'left button click and drag' operation." & @CRLF _
+   & "[8] CTRL+Z = Cancel last operation." & @CRLF _
+   & "[9] CTRL+Q = Stop mouse running." & @CRLF _
+   & "[10] CTRL+R = Run mouse pointer." & @CRLF _
+   & "[11] CTRL+SHIFT+R = Run mouse pointer in loop." & @CRLF)
 EndFunc
