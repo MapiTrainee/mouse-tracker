@@ -9,19 +9,26 @@
 #include <GDIPlus.au3>
 #include <GUIConstantsEx.au3>
 
-;<---USED HOTKEYS--->
+;<===USED HOTKEYS===>
 HotKeySet("{ESC}","Quit")
-HotKeySet("^{s}","WriteCurrentCoords")
+HotKeySet("^{s}","WriteMouseState")
+HotKeySet("^{f}","WriteMouseState")
+HotKeySet("^{c}","WriteMouseState")
+HotKeySet("^+{c}","WriteMouseState")
+HotKeySet("^{d}","WriteMouseState")
+;HotKeySet("^{s}","WriteCurrentCoords")
 HotKeySet("^{r}","RunMousePointer")
 HotKeySet("^{e}","EmptyCoords")
 HotKeySet("^{z}","CancleLast")
 HotKeySet("^{t}","PrintTrack")
-;<!--USED HOTKEYS--!>
+;<!==USED HOTKEYS==!>
 
 Global $sIconPath = @ScriptDir & "/mt.ico"
 Global $aCoords[0]
 Global $hGUI = GUICreate("", @DesktopWidth, @DesktopHeight, 0, 0, $WS_POPUP, $WS_EX_LAYERED)
 Global $bTrackOn = True
+Global Enum $eMouseMove, $eMouseClick, $eMouseDoubleClick, $eMouseRightClick, $eMouseDrag
+Global $aMouseStates[0]
 
 GUISetBkColor(0x123456, $hGUI)
 GUISetIcon($sIconPath)
@@ -32,9 +39,25 @@ While True
    Sleep(100)
 WEnd
 
-Func WriteCurrentCoords()
+Func WriteMouseState()
+   Switch @HotKeyPressed
+	  Case "^{s}"
+		 WriteCurrentCoords($eMouseMove)
+	  Case "^{f}"
+		 WriteCurrentCoords($eMouseRightClick)
+	  Case "^{c}"
+		 WriteCurrentCoords($eMouseClick)
+	  Case "^+{c}"
+		 WriteCurrentCoords($eMouseDoubleClick)
+	  Case "^{d}"
+		 WriteCurrentCoords($eMouseDrag)
+   EndSwitch
+EndFunc
+
+Func WriteCurrentCoords($eMouse)
    _ArrayAdd($aCoords,MouseGetPos(0))
    _ArrayAdd($aCoords,MouseGetPos(1))
+   _ArrayAdd($aMouseStates,$eMouse)
    If $bTrackOn Then
 	  PrintTrackPoints()
    EndIf
