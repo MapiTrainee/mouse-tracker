@@ -9,6 +9,7 @@
 #include <GDIPlus.au3>
 #include <GUIConstantsEx.au3>
 #include <AutoItConstants.au3>
+#include <File.au3>
 
 ;<===USED HOTKEYS===>
 HotKeySet("{ESC}","Quit")
@@ -23,6 +24,8 @@ HotKeySet("^{q}","StopMouse")
 HotKeySet("^{e}","EmptyCoords")
 HotKeySet("^{z}","CancelLast")
 HotKeySet("^{t}","PrintTrack")
+HotKeySet("^{o}","ReadFromFile")
+HotKeySet("^{w}","WriteToFile")
 HotKeySet("{F1}","HelpMsgBox")
 ;<!==USED HOTKEYS==!>
 
@@ -78,8 +81,7 @@ EndFunc
 
 Func RunMousePointer()
    $bStopMouse = False
-   Local $j, $start_x, $start_y
-   $j = 1
+   Local $start_x, $start_y
    $prev_x = 0
    $prev_y = 0
 
@@ -87,7 +89,7 @@ Func RunMousePointer()
 	  $x = $aCoords[$i*2]
 	  $y = $aCoords[$i*2+1]
 
-	  Switch $aMouseStates[$j-1]
+	  Switch $aMouseStates[$i]
 	  Case $eMouseMove
 		 MouseMove($x,$y,$iMouseSpeed)
 	  Case $eMouseRightClick
@@ -103,7 +105,6 @@ Func RunMousePointer()
 	  $prev_x = $x
 	  $prev_y = $y
 
-	  $j = $j + 1
 	  If $bStopMouse Then
 		 $bStopMouse = False
 		 Return False
@@ -152,17 +153,16 @@ Func PrintTrackPoints()
    $hFont = _GDIPlus_FontCreate($hFamily, 10, 1)
 
    Local $iSpace = 4
-   Local $j = 1
 
    For $i = 0 To UBound($aCoords)/2 - 1
 	  $x = $aCoords[$i*2]
 	  $y = $aCoords[$i*2+1]
-	  $sString = $j
+	  $sString = $i + 1
 
 	  $tLayout = _GDIPlus_RectFCreate($x + 4, $y, 0, 0)
 	  $aInfo = _GDIPlus_GraphicsMeasureString($hGraphic, $sString, $hFont, $tLayout, $hFormat)
 
-	  Switch $aMouseStates[$j-1]
+	  Switch $aMouseStates[$i]
 	  Case $eMouseMove
 		 _GDIPlus_BrushSetSolidColor ($hBrushBg, 0xff18a1bf)
 	  Case $eMouseRightClick
@@ -178,8 +178,6 @@ Func PrintTrackPoints()
 	  _GDIPlus_GraphicsFillRect($hGraphic, $aInfo[0].X - $iSpace/2, $aInfo[0].Y - $iSpace/2, $aInfo[0].Width + $iSpace, $aInfo[0].Height + $iSpace, $hBrushBg)
 	  _GDIPlus_GraphicsDrawStringEx($hGraphic, $sString, $hFont, $aInfo[0], $hFormat, $hBrush)
 	  _GDIPlus_GraphicsDrawRect($hGraphic, $aInfo[0].X - $iSpace/2, $aInfo[0].Y - $iSpace/2, $aInfo[0].Width + $iSpace, $aInfo[0].Height + $iSpace, $hPen)
-
-	  $j = $j + 1
    Next
 
    _GDIPlus_FontDispose($hFont)
@@ -199,6 +197,41 @@ Func PrintTrack()
    Else
 	  PrintTrackPoints()
 	  $bTrackOn = True
+   EndIf
+EndFunc
+
+Func WriteToFile()
+   Local $x, $y, $m, $hFile, $sFilePath
+   $sFilePath = FileSaveDialog("Save as ...", @ScriptDir & "\", "Saves (*.mt)",$FD_PATHMUSTEXIST, "save.mt")
+   If @error == 0 Then
+	  $hFile = FileOpen($sFilePath, $FO_OVERWRITE)
+	  For $i = 0 To UBound($aCoords)/2 - 1
+		 $x = $aCoords[$i*2]
+		 $y = $aCoords[$i*2+1]
+		 $m = $aMouseStates[$i]
+		 FileWriteLine($hFile, $x & @CRLF  & $y & @CRLF & $m)
+	  Next
+	  FileClose($hFile)
+   EndIf
+EndFunc
+
+Func ReadFromFile()
+   Local $aFile, $hFile, $sFilePath
+
+   $sFilePath = FileOpenDialog("Select Mouse Tracker save", @ScriptDir & "\", "Saves (*.mt)", $FD_FILEMUSTEXIST)
+   If @error == 0 Then
+	  EmptyCoords()
+	  $hFile = FileOpen($sFilePath)
+	  $aFile = FileReadToArray($hFile)
+	  FileClose($hFile)
+
+	  For $i = 0 To UBound($aFile)/3 - 1
+		 _ArrayAdd($aCoords,$aFile[$i*3])
+		 _ArrayAdd($aCoords,$aFile[$i*3+1])
+		 _ArrayAdd($aMouseStates,$aFile[$i*3+2])
+	  Next
+	  $bTrackOn = False
+	  PrintTrack()
    EndIf
 EndFunc
 
@@ -223,5 +256,7 @@ Func HelpMsgBox()
    & "[9] CTRL+Q = Stop mouse running." & @CRLF _
    & "[10] CTRL+R = Run mouse pointer." & @CRLF _
    & "[11] CTRL+SHIFT+R = Run mouse pointer in loop." & @CRLF _
-   & "[12] CTRL+T = Switch on/off track mode." & @CRLF)
+   & "[12] CTRL+T = Switch on/off track mode." & @CRLF _
+   & "[13] CTRL+W = Save the way." & @CRLF _
+   & "[14] CTRL+O = Load the way." & @CRLF)
 EndFunc
